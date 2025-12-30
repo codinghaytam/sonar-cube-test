@@ -1,0 +1,164 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > WithdrawCommand</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.university.finance.pattern.command</a>
+</div>
+
+<h1>Coverage Summary for Class: WithdrawCommand (com.university.finance.pattern.command)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">WithdrawCommand</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (3/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    77.8%
+  </span>
+  <span class="absValue">
+    (14/18)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.university.finance.pattern.command;
+&nbsp;
+&nbsp;import java.util.Scanner;
+&nbsp;
+&nbsp;import com.university.finance.model.Account;
+&nbsp;import com.university.finance.service.BankingService;
+&nbsp;
+&nbsp;// Commande pour effectuer un retrait d&#39;un compte
+&nbsp;public class WithdrawCommand implements Command {
+&nbsp;    private BankingService bankingService;
+&nbsp;    private Scanner scanner;
+&nbsp;    
+&nbsp;    // Constructeur avec injection de dépendances
+<b class="fc">&nbsp;    public WithdrawCommand(BankingService bankingService, Scanner scanner) {</b>
+<b class="fc">&nbsp;        this.bankingService = bankingService;</b>
+<b class="fc">&nbsp;        this.scanner = scanner;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Exécute la commande de retrait
+&nbsp;    @Override
+&nbsp;    public void execute() {
+<b class="fc">&nbsp;        System.out.print(&quot;Nom utilisateur: &quot;);</b>
+<b class="fc">&nbsp;        String username = scanner.nextLine();</b>
+&nbsp;        
+<b class="fc">&nbsp;        Account account = bankingService.getAccount(username);</b>
+<b class="pc">&nbsp;        if (account != null) {</b>
+<b class="fc">&nbsp;            System.out.print(&quot;Montant à retirer: &quot;);</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                double amount = Double.parseDouble(scanner.nextLine());</b>
+<b class="pc">&nbsp;                if (amount &gt; 0) {</b>
+<b class="fc">&nbsp;                    double balance = bankingService.getBalance(username);</b>
+<b class="pc">&nbsp;                    if (balance &gt;= amount) {</b>
+<b class="fc">&nbsp;                        bankingService.withdraw(username, amount);</b>
+<b class="fc">&nbsp;                        System.out.println(&quot;Retrait réussi. Nouveau solde: $&quot; + bankingService.getBalance(username));</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        System.out.println(&quot;Solde insuffisant. Solde actuel: $&quot; + balance);</b>
+&nbsp;                    }
+&nbsp;                } else {
+<b class="nc">&nbsp;                    System.out.println(&quot;Le montant doit être positif.&quot;);</b>
+&nbsp;                }
+&nbsp;            } catch (NumberFormatException e) {
+<b class="nc">&nbsp;                System.out.println(&quot;Montant invalide.&quot;);</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            System.out.println(&quot;Compte non trouvé pour l&#39;utilisateur: &quot; + username);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 11:35</div>
+</div>
+</body>
+</html>

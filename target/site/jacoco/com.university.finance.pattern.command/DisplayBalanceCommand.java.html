@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DisplayBalanceCommand.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">spaghetti-finance</a> &gt; <a href="index.source.html" class="el_package">com.university.finance.pattern.command</a> &gt; <span class="el_source">DisplayBalanceCommand.java</span></div><h1>DisplayBalanceCommand.java</h1><pre class="source lang-java linenums">package com.university.finance.pattern.command;
+
+import java.util.Scanner;
+
+import com.university.finance.model.Account;
+import com.university.finance.service.BankingService;
+
+// Commande pour afficher le solde d'un compte
+public class DisplayBalanceCommand implements Command {
+    private BankingService bankingService; // Receiver of the command
+    private Scanner scanner;
+    
+    // Constructeur avec injection de dépendances
+<span class="fc" id="L14">    public DisplayBalanceCommand(BankingService bankingService, Scanner scanner) {</span>
+<span class="fc" id="L15">        this.bankingService = bankingService;</span>
+<span class="fc" id="L16">        this.scanner = scanner;</span>
+<span class="fc" id="L17">    }</span>
+    
+    // Exécute la commande d'affichage du solde
+    @Override
+    public void execute() {
+<span class="fc" id="L22">        System.out.print(&quot;Nom utilisateur: &quot;);</span>
+<span class="fc" id="L23">        String username = scanner.nextLine();</span>
+        
+<span class="fc" id="L25">        Account account = bankingService.getAccount(username);</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (account != null) {</span>
+<span class="fc" id="L27">            System.out.println(&quot;Solde du compte &quot; + username + &quot;: $&quot; + account.getBalance());</span>
+        } else {
+<span class="fc" id="L29">            System.out.println(&quot;Compte non trouvé pour l'utilisateur: &quot; + username);</span>
+        }
+<span class="fc" id="L31">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

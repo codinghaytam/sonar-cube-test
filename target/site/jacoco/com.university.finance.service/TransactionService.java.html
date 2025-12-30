@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">spaghetti-finance</a> &gt; <a href="index.source.html" class="el_package">com.university.finance.service</a> &gt; <span class="el_source">TransactionService.java</span></div><h1>TransactionService.java</h1><pre class="source lang-java linenums">package com.university.finance.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import com.university.finance.model.Account;
+import com.university.finance.model.Transaction;
+import com.university.finance.pattern.strategy.DepositStrategy;
+import com.university.finance.pattern.strategy.TransactionStrategy;
+import com.university.finance.pattern.strategy.TransferStrategy;
+import com.university.finance.pattern.strategy.WithdrawStrategy;
+
+// Service spécialisé pour la gestion des opérations de transaction
+// Coordonne les opérations de dépôt, retrait et transfert entre comptes
+// Implémente le pattern Strategy en servant de contexte pour les stratégies de transaction
+public class TransactionService {
+    private BankingService bankingService;
+    private TransactionStrategy currentStrategy; // Contexte pour le pattern Strategy
+    
+    // Constructeur avec injection de dépendance
+<span class="fc" id="L22">    public TransactionService(BankingService bankingService) {</span>
+<span class="fc" id="L23">        this.bankingService = bankingService;</span>
+<span class="fc" id="L24">        this.currentStrategy = null;</span>
+<span class="fc" id="L25">    }</span>
+    
+    // Définit la stratégie courante à utiliser
+    public void setStrategy(TransactionStrategy strategy) {
+<span class="fc" id="L29">        this.currentStrategy = strategy;</span>
+<span class="fc" id="L30">    }</span>
+    
+    // Effectue un dépôt sur un compte
+    public boolean deposit(String accountId, double amount) {
+<span class="fc" id="L34">        Account account = bankingService.getAccount(accountId);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (account == null) {</span>
+<span class="fc" id="L36">            System.out.println(&quot;Compte non trouvé: &quot; + accountId);</span>
+<span class="fc" id="L37">            return false;</span>
+        }
+        
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        if (amount &lt;= 0) {</span>
+<span class="nc" id="L41">            System.out.println(&quot;Le montant du dépôt doit être positif&quot;);</span>
+<span class="nc" id="L42">            return false;</span>
+        }
+        
+        try {
+            // Utiliser la stratégie de dépôt dans le contexte
+<span class="fc" id="L47">            setStrategy(new DepositStrategy());</span>
+<span class="fc" id="L48">            currentStrategy.execute(account, amount);</span>
+            
+            // Notifier le service bancaire de la transaction
+<span class="fc" id="L51">            bankingService.recordTransaction(</span>
+<span class="fc" id="L52">                UUID.randomUUID().toString(),</span>
+                accountId,
+                &quot;DEPOSIT&quot;,
+                amount,
+                &quot;Dépôt de &quot; + amount + &quot; effectué&quot;
+            );
+            
+<span class="fc" id="L59">            System.out.println(&quot;Dépôt de &quot; + amount + &quot; effectué avec succès sur le compte &quot; + accountId);</span>
+<span class="fc" id="L60">            return true;</span>
+<span class="nc" id="L61">        } catch (Exception e) {</span>
+<span class="nc" id="L62">            System.out.println(&quot;Erreur lors du dépôt: &quot; + e.getMessage());</span>
+<span class="nc" id="L63">            return false;</span>
+        }
+    }
+    
+    // Effectue un retrait d'un compte
+    public boolean withdraw(String accountId, double amount) {
+<span class="fc" id="L69">        Account account = bankingService.getAccount(accountId);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (account == null) {</span>
+<span class="nc" id="L71">            System.out.println(&quot;Compte non trouvé: &quot; + accountId);</span>
+<span class="nc" id="L72">            return false;</span>
+        }
+        
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (amount &lt;= 0) {</span>
+<span class="nc" id="L76">            System.out.println(&quot;Le montant du retrait doit être positif&quot;);</span>
+<span class="nc" id="L77">            return false;</span>
+        }
+        
+        // Vérifier le solde
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (account.getBalance() &lt; amount) {</span>
+<span class="fc" id="L82">            System.out.println(&quot;Solde insuffisant pour le retrait&quot;);</span>
+<span class="fc" id="L83">            return false;</span>
+        }
+        
+        try {
+            // Utiliser la stratégie de retrait dans le contexte
+<span class="fc" id="L88">            setStrategy(new WithdrawStrategy());</span>
+<span class="fc" id="L89">            currentStrategy.execute(account, amount);</span>
+            
+            // Notifier le service bancaire de la transaction
+<span class="fc" id="L92">            bankingService.recordTransaction(</span>
+<span class="fc" id="L93">                UUID.randomUUID().toString(),</span>
+                accountId,
+                &quot;WITHDRAW&quot;,
+                amount,
+                &quot;Retrait de &quot; + amount + &quot; effectué&quot;
+            );
+            
+<span class="fc" id="L100">            System.out.println(&quot;Retrait de &quot; + amount + &quot; effectué avec succès du compte &quot; + accountId);</span>
+<span class="fc" id="L101">            return true;</span>
+<span class="nc" id="L102">        } catch (Exception e) {</span>
+<span class="nc" id="L103">            System.out.println(&quot;Erreur lors du retrait: &quot; + e.getMessage());</span>
+<span class="nc" id="L104">            return false;</span>
+        }
+    }
+    
+    // Effectue un transfert entre deux comptes
+    public boolean transfer(String fromAccountId, String toAccountId, double amount) {
+<span class="fc" id="L110">        Account fromAccount = bankingService.getAccount(fromAccountId);</span>
+<span class="fc" id="L111">        Account toAccount = bankingService.getAccount(toAccountId);</span>
+        
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (fromAccount == null) {</span>
+<span class="nc" id="L114">            System.out.println(&quot;Compte source non trouvé: &quot; + fromAccountId);</span>
+<span class="nc" id="L115">            return false;</span>
+        }
+        
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (toAccount == null) {</span>
+<span class="fc" id="L119">            System.out.println(&quot;Compte destination non trouvé: &quot; + toAccountId);</span>
+<span class="fc" id="L120">            return false;</span>
+        }
+        
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (amount &lt;= 0) {</span>
+<span class="nc" id="L124">            System.out.println(&quot;Le montant du transfert doit être positif&quot;);</span>
+<span class="nc" id="L125">            return false;</span>
+        }
+        
+        // Vérifier le solde du compte source
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (fromAccount.getBalance() &lt; amount) {</span>
+<span class="nc" id="L130">            System.out.println(&quot;Solde insuffisant pour le transfert&quot;);</span>
+<span class="nc" id="L131">            return false;</span>
+        }
+        
+        try {
+            // Utiliser la stratégie de transfert dans le contexte
+<span class="fc" id="L136">            setStrategy(new TransferStrategy(toAccount));</span>
+<span class="fc" id="L137">            currentStrategy.execute(fromAccount, amount);</span>
+            
+            // Notifier le service bancaire des transactions
+<span class="fc" id="L140">            bankingService.recordTransaction(</span>
+<span class="fc" id="L141">                UUID.randomUUID().toString(),</span>
+                fromAccountId,
+                &quot;TRANSFER_OUT&quot;,
+                amount,
+                &quot;Transfert de &quot; + amount + &quot; vers le compte &quot; + toAccountId
+            );
+            
+<span class="fc" id="L148">            bankingService.recordTransaction(</span>
+<span class="fc" id="L149">                UUID.randomUUID().toString(),</span>
+                toAccountId,
+                &quot;TRANSFER_IN&quot;,
+                amount,
+                &quot;Réception de &quot; + amount + &quot; du compte &quot; + fromAccountId
+            );
+            
+<span class="fc" id="L156">            System.out.println(&quot;Transfert de &quot; + amount + &quot; du compte &quot; + fromAccountId + &quot; vers le compte &quot; + toAccountId + &quot; effectué avec succès&quot;);</span>
+<span class="fc" id="L157">            return true;</span>
+<span class="nc" id="L158">        } catch (Exception e) {</span>
+<span class="nc" id="L159">            System.out.println(&quot;Erreur lors du transfert: &quot; + e.getMessage());</span>
+<span class="nc" id="L160">            return false;</span>
+        }
+    }
+    
+    // Récupère l'historique complet des transactions
+    public List&lt;Transaction&gt; getTransactionHistory() {
+<span class="fc" id="L166">        return bankingService.getTransactionHistory();</span>
+    }
+    
+    // Récupère l'historique des transactions pour un compte spécifique
+    public List&lt;Transaction&gt; getTransactionHistoryForAccount(String accountId) {
+<span class="nc" id="L171">        List&lt;Transaction&gt; allTransactions = bankingService.getTransactionHistory();</span>
+<span class="nc" id="L172">        List&lt;Transaction&gt; accountTransactions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        for (Transaction transaction : allTransactions) {</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (transaction.getAccountId().equals(accountId)) {</span>
+<span class="nc" id="L175">                accountTransactions.add(transaction);</span>
+            }
+<span class="nc" id="L177">        }</span>
+<span class="nc" id="L178">        return accountTransactions;</span>
+    }
+    
+    // Récupère les transactions par type (DEPOSIT, WITHDRAW, etc.)
+    public List&lt;Transaction&gt; getTransactionsByType(String transactionType) {
+<span class="nc" id="L183">        List&lt;Transaction&gt; allTransactions = bankingService.getTransactionHistory();</span>
+<span class="nc" id="L184">        List&lt;Transaction&gt; filteredTransactions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        for (Transaction transaction : allTransactions) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (transaction.getTransactionType().equals(transactionType)) {</span>
+<span class="nc" id="L187">                filteredTransactions.add(transaction);</span>
+            }
+<span class="nc" id="L189">        }</span>
+<span class="nc" id="L190">        return filteredTransactions;</span>
+    }
+    
+    // Récupère les transactions les plus récentes
+    public List&lt;Transaction&gt; getRecentTransactions(int limit) {
+<span class="nc" id="L195">        List&lt;Transaction&gt; allTransactions = bankingService.getTransactionHistory();</span>
+<span class="nc" id="L196">        int size = allTransactions.size();</span>
+<span class="nc" id="L197">        int fromIndex = Math.max(0, size - limit);</span>
+<span class="nc" id="L198">        List&lt;Transaction&gt; recentTransactions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        for (int i = fromIndex; i &lt; size; i++) {</span>
+<span class="nc" id="L200">            recentTransactions.add(allTransactions.get(i));</span>
+        }
+<span class="nc" id="L202">        return recentTransactions;</span>
+    }
+    
+    // Récupère le nombre total de transactions
+    public int getTransactionCount() {
+<span class="fc" id="L207">        return bankingService.getTransactionHistory().size();</span>
+    }
+    
+    // Récupère le nombre de transactions pour un compte spécifique
+    public int getTransactionCountForAccount(String accountId) {
+<span class="nc" id="L212">        return getTransactionHistoryForAccount(accountId).size();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

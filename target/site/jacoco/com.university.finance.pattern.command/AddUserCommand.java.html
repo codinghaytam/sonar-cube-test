@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AddUserCommand.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">spaghetti-finance</a> &gt; <a href="index.source.html" class="el_package">com.university.finance.pattern.command</a> &gt; <span class="el_source">AddUserCommand.java</span></div><h1>AddUserCommand.java</h1><pre class="source lang-java linenums">package com.university.finance.pattern.command;
+
+import com.university.finance.service.BankingService;
+import com.university.finance.model.User;
+import com.university.finance.model.Account;
+import java.util.Scanner;
+
+// Commande pour ajouter un nouvel utilisateur au système
+public class AddUserCommand implements Command {
+    private BankingService bankingService;
+    private Scanner scanner;
+    
+    // Constructeur avec injection de dépendances
+<span class="fc" id="L14">    public AddUserCommand(BankingService bankingService, Scanner scanner) {</span>
+<span class="fc" id="L15">        this.bankingService = bankingService;</span>
+<span class="fc" id="L16">        this.scanner = scanner;</span>
+<span class="fc" id="L17">    }</span>
+    
+    // Exécute la commande d'ajout d'utilisateur
+    @Override
+    public void execute() {
+<span class="fc" id="L22">        System.out.print(&quot;Nom utilisateur: &quot;);</span>
+<span class="fc" id="L23">        String username = scanner.nextLine();</span>
+        
+<span class="fc" id="L25">        System.out.print(&quot;Mot de passe: &quot;);</span>
+<span class="fc" id="L26">        String password = scanner.nextLine();</span>
+        
+        // Vérifier si l'utilisateur existe déjà
+<span class="fc" id="L29">        User existingUser = bankingService.getUser(username);</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if (existingUser != null) {</span>
+<span class="nc" id="L31">            System.out.println(&quot;Utilisateur déjà existant: &quot; + username);</span>
+<span class="nc" id="L32">            return;</span>
+        }
+        
+        // Créer l'utilisateur
+<span class="fc" id="L36">        User user = bankingService.createUser(username, password);</span>
+        
+<span class="fc" id="L38">        System.out.print(&quot;Solde initial du compte: &quot;); // Demander le solde initial du compte</span>
+        try {
+<span class="fc" id="L40">            double initialBalance = Double.parseDouble(scanner.nextLine());</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">            if (initialBalance &gt;= 0) {</span>
+<span class="fc" id="L42">                Account account = bankingService.createAccount(username, initialBalance);</span>
+<span class="fc" id="L43">                System.out.println(&quot;Utilisateur créé avec succès: &quot; + username);</span>
+<span class="fc" id="L44">                System.out.println(&quot;Compte créé avec solde: $&quot; + initialBalance);</span>
+<span class="fc" id="L45">            } else {</span>
+<span class="nc" id="L46">                System.out.println(&quot;Le solde initial doit être positif ou nul.&quot;);</span>
+            }
+<span class="nc" id="L48">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L49">            System.out.println(&quot;Solde initial invalide. Création de l'utilisateur sans compte.&quot;);</span>
+<span class="nc" id="L50">            System.out.println(&quot;Utilisateur créé avec succès: &quot; + username);</span>
+<span class="fc" id="L51">        }</span>
+<span class="fc" id="L52">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

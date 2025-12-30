@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">spaghetti-finance</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">MainApp.java</span></div><h1>MainApp.java</h1><pre class="source lang-java linenums">import com.university.finance.pattern.command.MenuHandler;
+import com.university.finance.pattern.factory.ConcreteAccountFactory;
+import com.university.finance.pattern.factory.ConcreteUserFactory;
+import com.university.finance.service.BankingService;
+import com.university.finance.service.TransactionService;
+
+import io.prometheus.client.exporter.HTTPServer;
+import io.prometheus.client.hotspot.DefaultExports;
+
+// Classe principale de l'application financière
+// Point d'entrée de l'application avec initialisation de tous les composants
+<span class="nc" id="L12">public class MainApp {</span>
+    // Méthode principale qui démarre l'application
+    public static void main(String[] args) {
+<span class="nc" id="L15">        System.out.println(&quot;=== Finance Application STARTING ===&quot;);</span>
+        
+        // Try to initialize Prometheus metrics
+        try {
+            // Using reflection to check if Prometheus classes are available
+<span class="nc" id="L20">            Class.forName(&quot;io.prometheus.client.hotspot.DefaultExports&quot;);</span>
+<span class="nc" id="L21">            Class.forName(&quot;io.prometheus.client.exporter.HTTPServer&quot;);</span>
+            
+            // If classes are available, initialize Prometheus
+<span class="nc" id="L24">            DefaultExports.initialize();</span>
+<span class="nc" id="L25">            HTTPServer server = new HTTPServer(8082);</span>
+<span class="nc" id="L26">            System.out.println(&quot;Metrics server started on port 8082&quot;);</span>
+<span class="nc" id="L27">        } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L28">            System.out.println(&quot;Prometheus libraries not found. Running without metrics.&quot;);</span>
+<span class="nc" id="L29">        } catch (Exception e) {</span>
+<span class="nc" id="L30">            System.err.println(&quot;Failed to start metrics server: &quot; + e.getMessage());</span>
+<span class="nc" id="L31">        }</span>
+        
+        // Initialiser les factories
+<span class="nc" id="L34">        ConcreteAccountFactory accountFactory = new ConcreteAccountFactory();</span>
+<span class="nc" id="L35">        ConcreteUserFactory userFactory = new ConcreteUserFactory();</span>
+        
+        // Initialiser les services    
+<span class="nc" id="L38">        BankingService bankingService = new BankingService(accountFactory, userFactory, null); // Temporary null</span>
+<span class="nc" id="L39">        TransactionService transactionService = new TransactionService(bankingService);</span>
+        // S
+        // et the transaction service in banking service using a setter
+<span class="nc" id="L42">        bankingService.setTransactionService(transactionService);</span>
+        
+        // Créer et exécuter le menu
+<span class="nc" id="L45">        MenuHandler menuHandler = new MenuHandler(bankingService, transactionService);</span>
+<span class="nc" id="L46">        menuHandler.run();</span>
+        
+<span class="nc" id="L48">        System.out.println(&quot;=== Finance Application ENDING ===&quot;);</span>
+<span class="nc" id="L49">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

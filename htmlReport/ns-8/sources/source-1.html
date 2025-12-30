@@ -1,0 +1,291 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BankingService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.university.finance.service</a>
+</div>
+
+<h1>Coverage Summary for Class: BankingService (com.university.finance.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BankingService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.2%
+  </span>
+  <span class="absValue">
+    (15/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    56.2%
+  </span>
+  <span class="absValue">
+    (9/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.6%
+  </span>
+  <span class="absValue">
+    (62/70)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.university.finance.service;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collection;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;import com.university.finance.model.Account;
+&nbsp;import com.university.finance.model.Transaction;
+&nbsp;import com.university.finance.model.User;
+&nbsp;import com.university.finance.pattern.factory.AccountFactory;
+&nbsp;import com.university.finance.pattern.factory.UserFactory;
+&nbsp;import com.university.finance.pattern.observer.AuditLogger;
+&nbsp;import com.university.finance.pattern.observer.NotificationService;
+&nbsp;import com.university.finance.pattern.observer.TransactionObserver;
+&nbsp;
+&nbsp;import io.prometheus.client.Counter;
+&nbsp;
+&nbsp;// Le contexte de notre pattern Command
+&nbsp;// Ce service gère les collections d&#39;utilisateurs et les opérations s&#39;effectuant selon le choix de l&#39;utilisateur lors de l&#39;utilisation du menu
+&nbsp;// Gère l&#39;ajout des utilisateurs à la collection des utilisateurs lors de chaque création
+&nbsp;// Ajoute les observateurs à la liste des observateurs
+&nbsp;// Gère la journalisation des transactions selon l&#39;opération adaptée
+&nbsp;
+&nbsp;public class BankingService {
+<b class="fc">&nbsp;    private Map&lt;String, Account&gt; accounts = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private Map&lt;String, User&gt; users = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;TransactionObserver&gt; observers = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;Transaction&gt; transactions = new ArrayList&lt;&gt;();</b>
+&nbsp;    private TransactionService transactionService; // Service de transaction
+&nbsp;    
+&nbsp;    // Définir les compteurs Prometheus
+<b class="fc">&nbsp;    private static final Counter usersTotal = Counter.build()</b>
+<b class="fc">&nbsp;            .name(&quot;finance_users_total&quot;)</b>
+<b class="fc">&nbsp;            .help(&quot;Total number of users&quot;)</b>
+<b class="fc">&nbsp;            .register();</b>
+&nbsp;    
+<b class="fc">&nbsp;    private static final Counter accountsTotal = Counter.build()</b>
+<b class="fc">&nbsp;            .name(&quot;finance_accounts_total&quot;)</b>
+<b class="fc">&nbsp;            .help(&quot;Total number of accounts&quot;)</b>
+<b class="fc">&nbsp;            .register();</b>
+&nbsp;    
+<b class="fc">&nbsp;    private static final Counter transactionsTotal = Counter.build()</b>
+<b class="fc">&nbsp;            .name(&quot;finance_transactions_total&quot;)</b>
+<b class="fc">&nbsp;            .help(&quot;Total number of transactions&quot;)</b>
+<b class="fc">&nbsp;            .register();</b>
+&nbsp;    
+&nbsp;    // Les usines ou Factories de création d&#39;utilisateurs et comptes
+&nbsp;    private AccountFactory accountFactory;
+&nbsp;    private UserFactory userFactory;
+&nbsp;    
+<b class="fc">&nbsp;    public BankingService(AccountFactory accountFactory, UserFactory userFactory, TransactionService transactionService) {</b>
+<b class="fc">&nbsp;        this.accountFactory = accountFactory;</b>
+<b class="fc">&nbsp;        this.userFactory = userFactory;</b>
+<b class="fc">&nbsp;        this.transactionService = transactionService;</b>
+&nbsp;        
+&nbsp;        // Ajout ou subscription des observateurs
+<b class="fc">&nbsp;        observers.add(new AuditLogger());</b>
+<b class="fc">&nbsp;        observers.add(new NotificationService());</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public User createUser(String username, String password) {
+<b class="fc">&nbsp;        User user = userFactory.createUser(username, password);</b>
+<b class="fc">&nbsp;        users.put(username, user);</b>
+<b class="fc">&nbsp;        usersTotal.inc(); // Incrémenter le compteur d&#39;utilisateurs</b>
+<b class="fc">&nbsp;        notifyObservers(&quot;User created: &quot; + username);</b>
+<b class="fc">&nbsp;        return user;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Account createAccount(String userId, double initialBalance) {
+<b class="fc">&nbsp;        Account account = accountFactory.createAccount(userId, initialBalance);</b>
+<b class="fc">&nbsp;        accounts.put(userId, account);</b>
+<b class="fc">&nbsp;        accountsTotal.inc(); // Incrémenter le compteur de comptes</b>
+<b class="fc">&nbsp;        transactions.add(new Transaction(</b>
+<b class="fc">&nbsp;            UUID.randomUUID().toString(),</b>
+&nbsp;            userId,
+&nbsp;            &quot;CREATE_ACCOUNT&quot;,
+&nbsp;            initialBalance,
+&nbsp;            &quot;Account created with initial balance: &quot; + initialBalance
+&nbsp;        ));
+<b class="fc">&nbsp;        transactionsTotal.inc(); // Incrémenter le compteur de transactions</b>
+<b class="fc">&nbsp;        notifyObservers(&quot;Account created for user: &quot; + userId + &quot; with balance: &quot; + initialBalance);</b>
+<b class="fc">&nbsp;        return account;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public boolean deposit(String accountId, double amount) {
+<b class="pc">&nbsp;        if (transactionService == null) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Service de transaction non initialisé&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        boolean result = transactionService.deposit(accountId, amount);</b>
+<b class="pc">&nbsp;        if (result) {</b>
+&nbsp;            // Notifier les observateurs
+<b class="fc">&nbsp;            notifyObservers(&quot;Dépôt de &quot; + amount + &quot; effectué sur le compte &quot; + accountId);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public boolean withdraw(String accountId, double amount) {
+<b class="pc">&nbsp;        if (transactionService == null) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Service de transaction non initialisé&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        boolean result = transactionService.withdraw(accountId, amount);</b>
+<b class="pc">&nbsp;        if (result) {</b>
+&nbsp;            // Notifier les observateurs
+<b class="fc">&nbsp;            notifyObservers(&quot;Retrait de &quot; + amount + &quot; effectué du compte &quot; + accountId);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public boolean transfer(String fromAccountId, String toAccountId, double amount) {
+<b class="pc">&nbsp;        if (transactionService == null) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Service de transaction non initialisé&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        boolean result = transactionService.transfer(fromAccountId, toAccountId, amount);</b>
+<b class="pc">&nbsp;        if (result) {</b>
+&nbsp;            // Notifier les observateurs
+<b class="fc">&nbsp;            notifyObservers(&quot;Transfert de &quot; + amount + &quot; du compte &quot; + fromAccountId + &quot; vers le compte &quot; + toAccountId + &quot; effectué&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return result;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public double getBalance(String accountId) {
+<b class="fc">&nbsp;        Account account = accounts.get(accountId);</b>
+<b class="pc">&nbsp;        return account != null ? account.getBalance() : 0.0;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Account getAccount(String accountId) {
+<b class="fc">&nbsp;        return accounts.get(accountId);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public User getUser(String username) {
+<b class="fc">&nbsp;        return users.get(username);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public List&lt;Transaction&gt; getTransactionHistory() {
+<b class="fc">&nbsp;        return new ArrayList&lt;&gt;(transactions);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Méthodes supplémentaires pour le pattern commande
+&nbsp;    public Collection&lt;User&gt; getAllUsers() {
+<b class="nc">&nbsp;        return users.values();</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Collection&lt;Account&gt; getAllAccounts() {
+<b class="nc">&nbsp;        return accounts.values();</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Méthodes supplémentaires pour le service de transactions
+&nbsp;    public void addTransaction(Transaction transaction) {
+<b class="fc">&nbsp;        transactions.add(transaction);</b>
+<b class="fc">&nbsp;        transactionsTotal.inc(); // Incrémenter le compteur de transactions</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Méthode pour enregistrer les transactions 
+&nbsp;    public void recordTransaction(String id, String accountId, String type, double amount, String description) {
+<b class="fc">&nbsp;        Transaction transaction = new Transaction(id, accountId, type, amount, description);</b>
+<b class="fc">&nbsp;        addTransaction(transaction);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTransactionService(TransactionService transactionService) {
+<b class="fc">&nbsp;        this.transactionService = transactionService;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void notifyObservers(String message) {
+<b class="fc">&nbsp;        for (TransactionObserver observer : observers) {</b>
+<b class="fc">&nbsp;            observer.update(message);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 11:35</div>
+</div>
+</body>
+</html>

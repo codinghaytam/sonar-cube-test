@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BankingService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">spaghetti-finance</a> &gt; <a href="index.source.html" class="el_package">com.university.finance.service</a> &gt; <span class="el_source">BankingService.java</span></div><h1>BankingService.java</h1><pre class="source lang-java linenums">package com.university.finance.service;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import com.university.finance.model.Account;
+import com.university.finance.model.Transaction;
+import com.university.finance.model.User;
+import com.university.finance.pattern.factory.AccountFactory;
+import com.university.finance.pattern.factory.UserFactory;
+import com.university.finance.pattern.observer.AuditLogger;
+import com.university.finance.pattern.observer.NotificationService;
+import com.university.finance.pattern.observer.TransactionObserver;
+
+import io.prometheus.client.Counter;
+
+// Le contexte de notre pattern Command
+// Ce service gère les collections d'utilisateurs et les opérations s'effectuant selon le choix de l'utilisateur lors de l'utilisation du menu
+// Gère l'ajout des utilisateurs à la collection des utilisateurs lors de chaque création
+// Ajoute les observateurs à la liste des observateurs
+// Gère la journalisation des transactions selon l'opération adaptée
+
+public class BankingService {
+<span class="fc" id="L28">    private Map&lt;String, Account&gt; accounts = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L29">    private Map&lt;String, User&gt; users = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L30">    private List&lt;TransactionObserver&gt; observers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L31">    private List&lt;Transaction&gt; transactions = new ArrayList&lt;&gt;();</span>
+    private TransactionService transactionService; // Service de transaction
+    
+    // Définir les compteurs Prometheus
+<span class="fc" id="L35">    private static final Counter usersTotal = Counter.build()</span>
+<span class="fc" id="L36">            .name(&quot;finance_users_total&quot;)</span>
+<span class="fc" id="L37">            .help(&quot;Total number of users&quot;)</span>
+<span class="fc" id="L38">            .register();</span>
+    
+<span class="fc" id="L40">    private static final Counter accountsTotal = Counter.build()</span>
+<span class="fc" id="L41">            .name(&quot;finance_accounts_total&quot;)</span>
+<span class="fc" id="L42">            .help(&quot;Total number of accounts&quot;)</span>
+<span class="fc" id="L43">            .register();</span>
+    
+<span class="fc" id="L45">    private static final Counter transactionsTotal = Counter.build()</span>
+<span class="fc" id="L46">            .name(&quot;finance_transactions_total&quot;)</span>
+<span class="fc" id="L47">            .help(&quot;Total number of transactions&quot;)</span>
+<span class="fc" id="L48">            .register();</span>
+    
+    // Les usines ou Factories de création d'utilisateurs et comptes
+    private AccountFactory accountFactory;
+    private UserFactory userFactory;
+    
+<span class="fc" id="L54">    public BankingService(AccountFactory accountFactory, UserFactory userFactory, TransactionService transactionService) {</span>
+<span class="fc" id="L55">        this.accountFactory = accountFactory;</span>
+<span class="fc" id="L56">        this.userFactory = userFactory;</span>
+<span class="fc" id="L57">        this.transactionService = transactionService;</span>
+        
+        // Ajout ou subscription des observateurs
+<span class="fc" id="L60">        observers.add(new AuditLogger());</span>
+<span class="fc" id="L61">        observers.add(new NotificationService());</span>
+<span class="fc" id="L62">    }</span>
+    
+    public User createUser(String username, String password) {
+<span class="fc" id="L65">        User user = userFactory.createUser(username, password);</span>
+<span class="fc" id="L66">        users.put(username, user);</span>
+<span class="fc" id="L67">        usersTotal.inc(); // Incrémenter le compteur d'utilisateurs</span>
+<span class="fc" id="L68">        notifyObservers(&quot;User created: &quot; + username);</span>
+<span class="fc" id="L69">        return user;</span>
+    }
+    
+    public Account createAccount(String userId, double initialBalance) {
+<span class="fc" id="L73">        Account account = accountFactory.createAccount(userId, initialBalance);</span>
+<span class="fc" id="L74">        accounts.put(userId, account);</span>
+<span class="fc" id="L75">        accountsTotal.inc(); // Incrémenter le compteur de comptes</span>
+<span class="fc" id="L76">        transactions.add(new Transaction(</span>
+<span class="fc" id="L77">            UUID.randomUUID().toString(),</span>
+            userId,
+            &quot;CREATE_ACCOUNT&quot;,
+            initialBalance,
+            &quot;Account created with initial balance: &quot; + initialBalance
+        ));
+<span class="fc" id="L83">        transactionsTotal.inc(); // Incrémenter le compteur de transactions</span>
+<span class="fc" id="L84">        notifyObservers(&quot;Account created for user: &quot; + userId + &quot; with balance: &quot; + initialBalance);</span>
+<span class="fc" id="L85">        return account;</span>
+    }
+    
+    public boolean deposit(String accountId, double amount) {
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (transactionService == null) {</span>
+<span class="nc" id="L90">            System.out.println(&quot;Service de transaction non initialisé&quot;);</span>
+<span class="nc" id="L91">            return false;</span>
+        }
+<span class="fc" id="L93">        boolean result = transactionService.deposit(accountId, amount);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (result) {</span>
+            // Notifier les observateurs
+<span class="fc" id="L96">            notifyObservers(&quot;Dépôt de &quot; + amount + &quot; effectué sur le compte &quot; + accountId);</span>
+        }
+<span class="fc" id="L98">        return result;</span>
+    }
+    
+    public boolean withdraw(String accountId, double amount) {
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (transactionService == null) {</span>
+<span class="nc" id="L103">            System.out.println(&quot;Service de transaction non initialisé&quot;);</span>
+<span class="nc" id="L104">            return false;</span>
+        }
+<span class="fc" id="L106">        boolean result = transactionService.withdraw(accountId, amount);</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (result) {</span>
+            // Notifier les observateurs
+<span class="fc" id="L109">            notifyObservers(&quot;Retrait de &quot; + amount + &quot; effectué du compte &quot; + accountId);</span>
+        }
+<span class="fc" id="L111">        return result;</span>
+    }
+    
+    public boolean transfer(String fromAccountId, String toAccountId, double amount) {
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (transactionService == null) {</span>
+<span class="nc" id="L116">            System.out.println(&quot;Service de transaction non initialisé&quot;);</span>
+<span class="nc" id="L117">            return false;</span>
+        }
+<span class="fc" id="L119">        boolean result = transactionService.transfer(fromAccountId, toAccountId, amount);</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (result) {</span>
+            // Notifier les observateurs
+<span class="fc" id="L122">            notifyObservers(&quot;Transfert de &quot; + amount + &quot; du compte &quot; + fromAccountId + &quot; vers le compte &quot; + toAccountId + &quot; effectué&quot;);</span>
+        }
+
+<span class="fc" id="L125">        return result;</span>
+    }
+    
+    public double getBalance(String accountId) {
+<span class="fc" id="L129">        Account account = accounts.get(accountId);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        return account != null ? account.getBalance() : 0.0;</span>
+    }
+    
+    public Account getAccount(String accountId) {
+<span class="nc" id="L134">        return accounts.get(accountId);</span>
+    }
+    
+    public User getUser(String username) {
+<span class="fc" id="L138">        return users.get(username);</span>
+    }
+    
+    public List&lt;Transaction&gt; getTransactionHistory() {
+<span class="nc" id="L142">        return new ArrayList&lt;&gt;(transactions);</span>
+    }
+    
+    // Méthodes supplémentaires pour le pattern commande
+    public Collection&lt;User&gt; getAllUsers() {
+<span class="nc" id="L147">        return users.values();</span>
+    }
+    
+    public Collection&lt;Account&gt; getAllAccounts() {
+<span class="nc" id="L151">        return accounts.values();</span>
+    }
+    
+    // Méthodes supplémentaires pour le service de transactions
+    public void addTransaction(Transaction transaction) {
+<span class="nc" id="L156">        transactions.add(transaction);</span>
+<span class="nc" id="L157">        transactionsTotal.inc(); // Incrémenter le compteur de transactions</span>
+<span class="nc" id="L158">    }</span>
+    
+    // Méthode pour enregistrer les transactions 
+    public void recordTransaction(String id, String accountId, String type, double amount, String description) {
+<span class="nc" id="L162">        Transaction transaction = new Transaction(id, accountId, type, amount, description);</span>
+<span class="nc" id="L163">        addTransaction(transaction);</span>
+<span class="nc" id="L164">    }</span>
+    
+    public void setTransactionService(TransactionService transactionService) {
+<span class="nc" id="L167">        this.transactionService = transactionService;</span>
+<span class="nc" id="L168">    }</span>
+    
+    public void notifyObservers(String message) {
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (TransactionObserver observer : observers) {</span>
+<span class="fc" id="L172">            observer.update(message);</span>
+<span class="fc" id="L173">        }</span>
+<span class="fc" id="L174">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

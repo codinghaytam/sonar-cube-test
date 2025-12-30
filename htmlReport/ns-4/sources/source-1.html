@@ -1,0 +1,169 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AddUserCommand</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.university.finance.pattern.command</a>
+</div>
+
+<h1>Coverage Summary for Class: AddUserCommand (com.university.finance.pattern.command)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AddUserCommand</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (2/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (16/20)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.university.finance.pattern.command;
+&nbsp;
+&nbsp;import com.university.finance.service.BankingService;
+&nbsp;import com.university.finance.model.User;
+&nbsp;import com.university.finance.model.Account;
+&nbsp;import java.util.Scanner;
+&nbsp;
+&nbsp;// Commande pour ajouter un nouvel utilisateur au système
+&nbsp;public class AddUserCommand implements Command {
+&nbsp;    private BankingService bankingService;
+&nbsp;    private Scanner scanner;
+&nbsp;    
+&nbsp;    // Constructeur avec injection de dépendances
+<b class="fc">&nbsp;    public AddUserCommand(BankingService bankingService, Scanner scanner) {</b>
+<b class="fc">&nbsp;        this.bankingService = bankingService;</b>
+<b class="fc">&nbsp;        this.scanner = scanner;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Exécute la commande d&#39;ajout d&#39;utilisateur
+&nbsp;    @Override
+&nbsp;    public void execute() {
+<b class="fc">&nbsp;        System.out.print(&quot;Nom utilisateur: &quot;);</b>
+<b class="fc">&nbsp;        String username = scanner.nextLine();</b>
+&nbsp;        
+<b class="fc">&nbsp;        System.out.print(&quot;Mot de passe: &quot;);</b>
+<b class="fc">&nbsp;        String password = scanner.nextLine();</b>
+&nbsp;        
+&nbsp;        // Vérifier si l&#39;utilisateur existe déjà
+<b class="fc">&nbsp;        User existingUser = bankingService.getUser(username);</b>
+<b class="pc">&nbsp;        if (existingUser != null) {</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Utilisateur déjà existant: &quot; + username);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;        
+&nbsp;        // Créer l&#39;utilisateur
+<b class="fc">&nbsp;        User user = bankingService.createUser(username, password);</b>
+&nbsp;        
+<b class="fc">&nbsp;        System.out.print(&quot;Solde initial du compte: &quot;); // Demander le solde initial du compte</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            double initialBalance = Double.parseDouble(scanner.nextLine());</b>
+<b class="pc">&nbsp;            if (initialBalance &gt;= 0) {</b>
+<b class="fc">&nbsp;                Account account = bankingService.createAccount(username, initialBalance);</b>
+<b class="fc">&nbsp;                System.out.println(&quot;Utilisateur créé avec succès: &quot; + username);</b>
+<b class="fc">&nbsp;                System.out.println(&quot;Compte créé avec solde: $&quot; + initialBalance);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                System.out.println(&quot;Le solde initial doit être positif ou nul.&quot;);</b>
+&nbsp;            }
+&nbsp;        } catch (NumberFormatException e) {
+<b class="nc">&nbsp;            System.out.println(&quot;Solde initial invalide. Création de l&#39;utilisateur sans compte.&quot;);</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Utilisateur créé avec succès: &quot; + username);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-18 11:35</div>
+</div>
+</body>
+</html>
